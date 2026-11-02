@@ -1,0 +1,34 @@
+name: Build artifact
+
+# Runs automatically on every push to main (and can be started by hand)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies and check the code
+        run: |
+          pip install -r webapp/requirements.txt
+          python -m py_compile common/*.py webapp/*.py
+          python -c "from webapp.app import app; print('App imports OK')"
+
+      - name: Build the artifact
+        run: bash build.sh
+
+      - name: Save the artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp
+          path: dist/webapp.tar.gz
